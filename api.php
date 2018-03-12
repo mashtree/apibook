@@ -1,10 +1,10 @@
 <?php 
 	
 	//Constants for database connection
-	define('DB_HOST','localhost');
-	define('DB_USER','root');
-	define('DB_PASS','');
-	define('DB_NAME','sewubuku');
+	define('DB_HOST','sql9.freemysqlhosting.net');
+	define('DB_USER','sql9220183');
+	define('DB_PASS','LZjL9zWAM8');
+	define('DB_NAME','sql9220183');
 
 	//We will upload files to this folder
 	//So one thing don't forget, also create a folder named uploads inside your project folder i.e. MyApi folder
