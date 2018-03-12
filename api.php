@@ -130,28 +130,39 @@
 					
 					array_push($readers, $temp);
 				}
-				//test encode image base64
-				/*$path = READER_UPLOAD_PATH."21.jpg";
-				$type = pathinfo($path, PATHINFO_EXTENSION);
-				$data = file_get_contents($path);
-				$base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-				$filename = explode("/", $path);
-				$fname = $filename[sizeof($filename)-1];
+			
+				//pushing the array in response 
+				$response['error'] = false;
+				$response['readers'] = $readers; 
+				break;
+			// done id = reg_number
+			case 'getreaderbybook':
+		
+				//getting server ip for building image url 
+				$server_ip = gethostbyname(gethostname());
+				$id = $_GET['id'];
+				//query to get images from database
+				$stmt = $conn->prepare("SELECT a.id, a.reg_number, a.name, a.location, a.phone, a.photo FROM readers a left join books b on a.id=b.reader_id 
+					WHERE b.id='".$id."'");
 				
-				//save_base64_image($base64, COVER_UPLOAD_PATH.$fname);				
-				//end test encode64
-				// A few settings
-				$img_file = READER_UPLOAD_PATH."21.jpg";
+				$stmt->execute();
+				$stmt->bind_result($id, $reg_number, $name, $location, $phone, $photo);
+				
+				$readers = array();
 
-				// Read image path, convert to base64 encoding
-				$imgData = base64_encode(file_get_contents($img_file));
-
-				// Format the image SRC:  data:{mime};base64,{data};
-				$src = 'data: '.mime_content_type($img_file).';base64,'.$imgData;
-				save_base64_image($src, COVER_UPLOAD_PATH.$fname);				
-				// Echo out a sample image
-				//echo '<img src="'.$base64.'">';
-				*/
+				//fetching all the images from database
+				//and pushing it to array 
+				while($stmt->fetch()){
+					$readers['id'] = $id;
+					$readers['reg_number'] = $reg_number;
+					$readers['name'] = $name;
+					$readers['location'] = $location;
+					$readers['phone'] = $phone;
+					$readers['photo'] = 'http://' . $server_ip . '/apibook/'. READER_UPLOAD_PATH . $photo; 
+					
+					//array_push($readers, $temp);
+				}
+			
 				//pushing the array in response 
 				$response['error'] = false;
 				$response['readers'] = $readers; 
@@ -281,42 +292,45 @@
 			// done
 			case 'each':
 				$id = $_GET['id'];
-				$sql = "SELECT a.id, a.title, a.author, a.publisher, a.rating, a.cover, b.name, b.photo FROM books a left join readers b ON a.reader_id = b.id WHERE a.id=".$id;
+				$sql = "SELECT a.id, a.title, a.author, a.publisher, a.rating, a.review, a.cover, b.name, b.photo FROM books a left join readers b ON a.reader_id = b.id WHERE a.id=".$id;
 				//getting server ip for building image url 
 				$server_ip = gethostbyname(gethostname());
 				//query to get images from database
 				$stmt = $conn->prepare($sql);
 				$stmt->execute();
-				$stmt->bind_result($id, $title, $author, $publisher, $rating, $cover, $name, $photo);
+				$stmt->bind_result($id, $title, $author, $publisher, $rating, $review, $cover, $name, $photo);
 				
-				$books = array();
+				$book = array();
 
 				while($stmt->fetch()){
-					$temp = array();
-					$temp['id'] = $id;
-					$temp['title'] = $title;
-					$temp['author'] = $author;
-					$temp['publisher'] = $publisher;
-					$temp['rating'] = $rating;
-					$temp['cover'] = 'http://' . $server_ip . '/apibook/'. COVER_UPLOAD_PATH . $cover; 
-					$temp['reader_name'] = $name;
-					$temp['reader_photo'] = 'http://' . $server_ip . '/apibook/'. READER_UPLOAD_PATH . $photo; 
+					//$temp = array();
+					$book['id'] = $id;
+					$book['title'] = $title;
+					$book['author'] = $author;
+					$book['publisher'] = $publisher;
+					$book['rating'] = $rating;
+					$book['review'] = $review;
+					$book['cover'] = 'http://' . $server_ip . '/apibook/'. COVER_UPLOAD_PATH . $cover; 
+					$book['reader_name'] = $name;
+					$book['reader_photo'] = 'http://' . $server_ip . '/apibook/'. READER_UPLOAD_PATH . $photo; 
 					
-					array_push($books, $temp);
+					//array_push($books, $temp);
 				}
 
-				$sql = "SELECT a.comment, a.review_rating, a.created_at, b.name, b.photo FROM comments a left join readers b on a.reader_id=b.id WHERE a.book_id=".$id;
+				$sql = "SELECT a.id, a.comment, a.review_rating, a.created_at, b.name, b.photo FROM comments a left join readers b on a.reader_id=b.id WHERE a.book_id=".$id;
 
 				$stmt = $conn->prepare($sql);
 				$stmt->execute();
-				$stmt->bind_result($comment, $review_rating, $created_at, $name, $photo);
+				$stmt->bind_result($id, $comment, $review_rating, $created_at, $name, $photo);
 				
 				$comments = array();
 
 				while($stmt->fetch()){
 					$temp = array();
+					$temp['id'] = $id;
 					$temp['comment'] = $comment;
 					$temp['review_rating'] = $review_rating;
+					$temp['name'] = $name;
 					$temp['created_at'] = $created_at;
 					$temp['reader_photo'] = 'http://' . $server_ip . '/apibook/'. READER_UPLOAD_PATH . $photo; 
 					
@@ -324,7 +338,7 @@
 				}
 				//pushing the array in response 
 				$response['error'] = false;
-				$response['books'] = $books;
+				$response['books'] = $book;
 				$response['comments'] = $comments;
 				break;
 			
